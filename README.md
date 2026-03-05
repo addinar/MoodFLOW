@@ -26,4 +26,22 @@ This app is designed for students who want to understand how their mood affects 
 - Encourages daily reflection and self-awareness  
 - Makes it easier to understand work habits  
 - Simple design that is easy to use and understand  
-- Visual graphs make trends clear at a glance  
+- Visual graphs make trends clear at a glance
+
+## Tech Stack
+
+### Frontend
+* Next.js
+* React.js
+* Tailwind CSS
+
+### Backend
+* Node.js
+* Express.js
+* Charts: Recharts or Chart.js
+
+### Database
+* Supabase - PostgreSQL
+
+### Deployment
+*  Vercel
