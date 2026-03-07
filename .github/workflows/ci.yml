@@ -1,4 +1,4 @@
-name: CI
+name: MoodFLOW CI Pipeline
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  run-tests:
     runs-on: ubuntu-latest
 
     strategy:
@@ -31,7 +31,7 @@ jobs:
         working-directory: ./backend
         run: npm test
 
-      - name: Run backend coverage
+      - name: Generate backend coverage
         working-directory: ./backend
         run: npm run test:coverage
 
@@ -43,6 +43,6 @@ jobs:
         working-directory: ./frontend
         run: npm test -- --watchAll=false
 
-      - name: Run frontend coverage
+      - name: Generate frontend coverage
         working-directory: ./frontend
         run: npm run test:coverage -- --watchAll=false
