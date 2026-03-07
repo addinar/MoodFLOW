@@ -19,6 +19,15 @@ The team will use a Pull Request workflow to ensure all code changes are reviewe
 3. At least **one team member** must review and approve the PR before it can be merged.
 
 ---
+## Rotational Review Model
+| Developer  | Reviewer(s) |
+| ------------- | ------------- |
+| Mohammad Kabir  | Addina Rahaman, Abdul Muswara  |
+| Addina Rahaman  | Minning Liu, Abdul Muswara  |
+| Minning Liu  | Mohammad Kabir, Ibrahim Rahat  |
+| Ibrahim Rahat  | Minning Liu, Addina Rahaman  |
+| Abdul Muswara  | Mohammad Kabir, Ibrahim Rahat  |
+---
 
 ## Responsibilities of the Reviewer
 
