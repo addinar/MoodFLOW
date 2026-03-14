@@ -1,3 +1,11 @@
+---
+name: Feature Request
+about: Suggest a new feature
+title: "[FEATURE] "
+labels: feature
+assignees: ""
+---
+
 # Feature Request Template
 
 ## Task Description
