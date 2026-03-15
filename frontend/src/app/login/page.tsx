@@ -3,14 +3,73 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
+import { auth, db } from "../../lib/firebase";
+import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     console.log({ email, password });
+
+    setError(null);
+    setLoading(true);
+
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      router.push("/dashboard");
+
+    } catch (err: any) {
+      console.log(err.message);
+      if (err.code === "auth/invalid-credential") {
+        setError("Invalid email or password.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+
+  }
+
+  async function handleGoogleSignIn() {
+    setError(null);
+    setLoading(true);
+  
+    try {
+      const provider = new GoogleAuthProvider();
+  
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+  
+      await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: user.email,
+          createdAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+  
+      router.push("/dashboard");
+  
+    } catch (err: any) {
+      setError("Google sign-in failed.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -70,11 +129,18 @@ export default function SignInPage() {
               </div>
             </div>
 
+            {error && (
+              <p className="mt-1 text-sm text-red-500 font-medium">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
+              disabled={loading}
               className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 py-4 text-white font-semibold text-lg shadow-[0_12px_30px_rgba(139,92,246,0.28)] hover:scale-[1.01] transition"
             >
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </button>
 
             <div className="text-center">
@@ -95,6 +161,7 @@ export default function SignInPage() {
 
           <button
             type="button"
+            onClick={handleGoogleSignIn}
             className="w-full rounded-2xl border border-slate-200 bg-white py-4 text-slate-700 font-medium hover:bg-slate-50 transition"
           >
             Sign in with Google

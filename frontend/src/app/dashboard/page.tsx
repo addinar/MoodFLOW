@@ -1,6 +1,21 @@
+"use client"; 
+import { onAuthStateChanged } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase";
 import DashboardHeader from "@/components/DashboardHeader";
 
 export default function DashboardPage() {
+  const [user, setUser] = useState<any>(null); // use this to define the current user
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+  
+    return () => unsubscribe();
+  }, []);
+
+
   const moods = [
     { label: "Very Bad", symbol: "😞", color: "border-amber-300" },
     { label: "Bad", symbol: "🙁", color: "border-rose-300" },
