@@ -3,14 +3,80 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
+import { auth, db } from "../../lib/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     console.log({ email, password });
+
+    setError(null);
+    setLoading(true);
+
+    if (password !== confirmPassword) {
+      setError("Passwords must match.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const user = userCredential.user;
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        createdAt: serverTimestamp()
+      });
+
+      router.push("/dashboard");
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignUp() {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        createdAt: serverTimestamp()
+      });
+
+      router.push("/dashboard");
+
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -79,19 +145,26 @@ export default function SignUpPage() {
                 <input
                   type="password"
                   placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
                   required
                 />
               </div>
             </div>
 
+            {error && (
+              <p className="mt-1 text-sm text-red-500 font-medium">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
+              disabled={loading}
               className="w-full mt-4 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 py-4 text-white font-semibold text-lg shadow-[0_12px_30px_rgba(139,92,246,0.28)] hover:scale-[1.01] transition"
             >
-              Sign Up
+              {loading ? "Creating account..." : "Sign Up"}
             </button>
 
             
@@ -105,6 +178,7 @@ export default function SignUpPage() {
 
           <button
             type="button"
+            onClick={handleGoogleSignUp}
             className="w-full rounded-2xl border border-slate-200 bg-white py-4 text-slate-700 font-medium hover:bg-slate-50 transition"
           >
             Sign up with Google
