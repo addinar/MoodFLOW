@@ -33,7 +33,8 @@ export default function SignInPage() {
       router.push("/dashboard");
 
     } catch (err: any) {
-      console.log(err.message);
+
+      // unit test section
       if (err.code === "auth/invalid-credential") {
         setError("Invalid email or password.");
       } else {
