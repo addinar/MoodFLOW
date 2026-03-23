@@ -1,11 +1,17 @@
 "use client"; 
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import DashboardHeader from "@/components/DashboardHeader";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null); // use this to define the current user
+  const [emojiScore, setEmojiScore] = useState<number | null>(null);
+  const [userInput, setUserInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -15,14 +21,99 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, []);
 
-
   const moods = [
-    { label: "Very Bad", symbol: "😞", color: "border-amber-300" },
-    { label: "Bad", symbol: "🙁", color: "border-rose-300" },
-    { label: "Neutral", symbol: "😐", color: "border-slate-300" },
-    { label: "Good", symbol: "🙂", color: "border-emerald-300" },
-    { label: "Excellent", symbol: "😄", color: "border-indigo-300" }
+    { label: "Very Bad", symbol: "😞", color: "border-amber-300", score: 1},
+    { label: "Bad", symbol: "🙁", color: "border-rose-300", score: 2 },
+    { label: "Neutral", symbol: "😐", color: "border-slate-300", score: 3 },
+    { label: "Good", symbol: "🙂", color: "border-emerald-300", score: 4 },
+    { label: "Excellent", symbol: "😄", color: "border-indigo-300", score: 5 }
   ];
+
+  const today = new Date().toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const handleSave = async () => {
+    
+    setError("");
+    setSaved(false);
+    setSaving(true);
+
+    try {
+      if (!user) {
+        setError("User not authenticated");
+        setSaving(false);
+        return;
+      }
+
+      if (emojiScore === null && userInput.trim() === "") {
+        setError("No input provided");
+        setSaving(false);
+        return;
+      }
+
+      if (emojiScore === null) {
+        setError("No emoji rating provided");
+        setSaving(false);
+        return;
+      }
+
+      if (userInput.trim() === "") {
+        setError("No note provided");
+        setSaving(false);
+        return;
+      }
+
+      const response = await fetch("http://localhost:3001/analyzeMood", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: userInput,
+          emojiScore: emojiScore,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to analyze mood");
+      }
+
+      const moodScore = data.moodScore;
+
+      const moodRef = collection(db, "users", user.uid, "moodEntries");
+      await addDoc(moodRef, {
+        emojiScore: emojiScore,
+        moodScore: moodScore,
+        note: userInput,
+        date: serverTimestamp(),
+      });
+
+      setSaved(true);
+      setEmojiScore(null);
+      setUserInput("");
+
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (saved) {
+      const timer = setTimeout(() => setSaved(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [saved]);
 
   const recentEntries = [
     {
@@ -100,7 +191,12 @@ export default function DashboardPage() {
                         <button
                           key={mood.label}
                           type="button"
-                          className={`relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 ${mood.color} bg-slate-50/80 dark:bg-slate-950/60 py-4 text-sm font-medium hover:-translate-y-1 hover:shadow-lg transition-all`}
+                          className={`relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 ${mood.color} bg-slate-50/80 dark:bg-slate-950/60 py-4 text-sm font-medium hover:-translate-y-1 hover:shadow-lg transition-all
+                            ${emojiScore === mood.score 
+                              ? "scale-105 shadow-xl -translate-y-1"
+                              : "hover:-translate-y-1 hover:shadow-lg"
+                            }`}
+                          onClick={() => {setEmojiScore(emojiScore === mood.score ? null : mood.score);}}
                         >
                           <span className="text-xl">{mood.symbol}</span>
                           <span className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -121,7 +217,19 @@ export default function DashboardPage() {
                       rows={4}
                       placeholder="Write your notes here..."
                       className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 px-4 py-3 text-sm resize-none placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/60"
+                      value={userInput} 
+                      onChange={(e) => setUserInput(e.target.value)}
                     />
+                    { error &&
+                    <p className="mt-1 ml-2 text-sm text-red-500 font-medium">
+                      {error}
+                    </p>
+                    }
+                    { saved &&
+                      <p className="mt-1 ml-2 text-sm text-green-500 font-medium">
+                       Entry saved.
+                      </p>
+                    }
                   </div>
 
                   {/* Date + action */}
@@ -131,11 +239,15 @@ export default function DashboardPage() {
                         <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                           Date
                         </p>
-                        <p className="text-sm font-medium">Today · March 2, 2026</p>
+                        <p className="text-sm font-medium">Today · {today}</p>
                       </div>
                     </div>
-                    <button className="inline-flex items-center justify-center px-6 md:px-8 py-3 rounded-2xl text-sm md:text-base font-semibold text-white bg-gradient-brand shadow-lg shadow-brand-600/30 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all">
-                      Save Entry
+                    <button 
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="inline-flex items-center justify-center px-6 md:px-8 py-3 rounded-2xl text-sm md:text-base font-semibold text-white bg-gradient-brand shadow-lg shadow-brand-600/30 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all"
+                    >
+                      {saving ? "Saving..." : "Save Entry"}
                     </button>
                   </div>
                 </div>
