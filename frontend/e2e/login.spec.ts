@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 // Checks if when the user logs in, the application redirects to the dashboard
 
 test("user can log in and gets redirected to dashboard", async ({ page }) => {
-    await page.goto("http://localhost:3002/login"); // go to login page
+    await page.goto("http://localhost:3000/login"); // go to login page
   
     // fill inputs
     await page.fill('input[type="email"]', "test@test.com");
