@@ -39,9 +39,15 @@ jobs:
         working-directory: ./frontend
         run: npm test
 
-      - name: Run coverage
+      - name: Run Jest coverage
         working-directory: ./frontend
-        run: npm run test -- --coverage
+        run: npm run test:coverage
+      
+      - name: Upload Jest coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-coverage
+          path: frontend/coverage
 
       - name: Install Playwright
         working-directory: ./frontend
