@@ -1,3 +1,9 @@
+// Mock Firebase db and auth
+jest.mock("../../lib/firebase", () => ({
+    auth: {},
+    db: {},
+}));
+
 import { render, screen, fireEvent } from "@testing-library/react";
 import SignInPage from "./page";
 
