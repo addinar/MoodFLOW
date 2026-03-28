@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { auth } from "../../lib/firebase";
 import { sendEmailVerification } from "firebase/auth";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const [message, setMessage] = useState<string | null>(null);
@@ -81,5 +81,17 @@ export default function VerifyEmailPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#f8f8fb] flex items-center justify-center">
+        <p className="text-slate-500 text-lg">Loading...</p>
+      </main>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
