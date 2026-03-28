@@ -5,10 +5,12 @@ import { useState, useEffect } from 'react';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import AvatarDropdown from './AvatarDropdown';
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -43,12 +45,7 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                onClick={handleSignOut}
-                className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
-              >
-                Sign Out
-              </button>
+              <AvatarDropdown user={user} open={open} setOpen={setOpen} onLogout={handleSignOut} />
             </div>
           </>
         ) : (
