@@ -27,7 +27,7 @@ export default function ProfilePage() {
     { label: "Trends", href: "#" },
     { label: "Insights", href: "#" },
     { label: "Profile", href: "/dashboard/profile", active: true },
-    { label: "Settings", href: "#" },
+    { label: "Settings", href: "/settings" },
   ];
 
   return (

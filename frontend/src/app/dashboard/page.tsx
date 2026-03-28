@@ -3,7 +3,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
-import DashboardHeader from "@/components/DashboardHeader";
+import Navbar from "@/components/Navbar";
 import {
   collection,
   addDoc,
@@ -184,7 +184,7 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-50">
-      <DashboardHeader />
+      <Navbar />
 
       <div className="pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto space-y-8">
