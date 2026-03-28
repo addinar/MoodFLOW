@@ -1,6 +1,22 @@
 import { render, screen } from '@testing-library/react'
 import Navbar from './Navbar'
 
+jest.mock('../lib/firebase', () => ({
+  auth: {},
+  db: {},
+}));
+
+jest.mock('firebase/auth', () => ({
+  onAuthStateChanged: jest.fn(() => jest.fn()),
+  signOut: jest.fn(),
+}));
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}));
+
 describe('Navbar', () => {
   it('renders the main navigation links', () => {
     render(<Navbar />)
